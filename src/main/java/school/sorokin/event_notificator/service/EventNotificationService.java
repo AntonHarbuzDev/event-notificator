@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -24,6 +25,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EventNotificationService {
+
+    @Value("${day.notification.storge}")
+    private Long dayNotificationStorage;
 
     private static final Logger log = LoggerFactory.getLogger(EventNotificationService.class);
 
@@ -62,6 +66,20 @@ public class EventNotificationService {
         List<EventNotificationEntity> entities = eventNotificationRepository.findAllById(notificationIds);
         entities.forEach(entity -> entity.setIsRead(true));
         log.info("switch status read is true");
+    }
+
+    @Transactional
+    public void deleteNotification() {
+        OffsetDateTime timeBeforeCreated = OffsetDateTime.now().minusDays(dayNotificationStorage);
+        log.info("we are looking for all EventNotifications up to {}", timeBeforeCreated);
+        List<EventNotificationEntity> eventEntities =
+                eventNotificationRepository.findAllByDateCreatedBefore(timeBeforeCreated);
+        if (eventEntities.isEmpty()) {
+            log.info("EventNotifications no found '=( ");
+        } else {
+            log.info("delete all EventNotifications found...");
+            eventEntities.forEach(eventNotificationRepository::delete);
+        }
     }
 
     private String getTokenFromRequest() {

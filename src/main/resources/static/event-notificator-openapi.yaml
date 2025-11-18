@@ -10,9 +10,6 @@ servers:
 tags:
   - name: Notifications
 
-security:
-  - bearerAuth: []
-
 paths:
   /notifications:
     get:
