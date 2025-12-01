@@ -52,7 +52,7 @@ public class EventNotificationService {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<EventKafkaShowDto> getMyEventsNoRead() {
         Long ownerId = getUserIdFromJwt(getTokenFromRequest());
         List<EventNotificationEntity> entitiesNoRead = eventNotificationRepository.findAllByIsReadAndOwnerNotificationId(false, ownerId);
@@ -85,14 +85,15 @@ public class EventNotificationService {
     private String getTokenFromRequest() {
         ServletRequestAttributes attributes = (ServletRequestAttributes)
                 RequestContextHolder.getRequestAttributes();
-        if (attributes != null) {
-            HttpServletRequest request = attributes.getRequest();
-            String authHeader = request.getHeader("Authorization");
-            if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
-                return authHeader.substring(7);
-            }
+        if (attributes == null) {
+            throw new IllegalStateException("No request attributes found");
         }
-        throw new IllegalStateException("No JWT token found in request");
+        HttpServletRequest request = attributes.getRequest();
+        String authHeader = request.getHeader("Authorization");
+        if (!StringUtils.hasText(authHeader) || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalStateException("No valid Authorization header found");
+        }
+        return authHeader.substring(7);
     }
 
     private Long getUserIdFromJwt(String jwtToken) {

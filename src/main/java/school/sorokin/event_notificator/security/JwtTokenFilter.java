@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import school.sorokin.event_notificator.exception.AuthenticationException;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -21,7 +22,6 @@ import java.util.List;
 
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
-
 
     private static final int NUMBER_FOR_THE_SAMPLE_BEARER_FROM_LINE_JST = 7;
 
@@ -67,6 +67,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(authHerder) && authHerder.startsWith("Bearer ")) {
             return authHerder.substring(NUMBER_FOR_THE_SAMPLE_BEARER_FROM_LINE_JST);
         }
-        return null;
+        throw new AuthenticationException("Authorization header is missing or invalid");
     }
 }
